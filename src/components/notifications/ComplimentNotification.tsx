@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ComplimentNotificationProps {
   compliment: Compliment | null;
@@ -16,6 +17,7 @@ const ComplimentNotification: React.FC<ComplimentNotificationProps> = ({
   onClose 
 }) => {
   const [visible, setVisible] = useState(!!compliment);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     setVisible(!!compliment);
@@ -41,17 +43,19 @@ const ComplimentNotification: React.FC<ComplimentNotificationProps> = ({
     <AnimatePresence>
       {visible && (
         <motion.div
-          className="fixed bottom-4 right-4 z-50 max-w-xs w-full"
-          initial={{ opacity: 0, y: 50 }}
+          className={`fixed z-50 max-w-xs w-full ${isMobile ? 'top-4 left-1/2 -translate-x-1/2' : 'bottom-4 right-4'}`}
+          initial={{ opacity: 0, y: isMobile ? -50 : 50 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
+          exit={{ opacity: 0, y: isMobile ? -20 : 20 }}
           transition={{ duration: 0.3 }}
         >
           <Card className="border-primary/20 shadow-lg">
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <h3 className="font-medium mb-1">Your Compliment</h3>
+                  <h3 className="font-medium mb-1">
+                    {compliment.isCustom ? "Your Compliment" : "Surprise Compliment"}
+                  </h3>
                   <p className="text-sm">{compliment.text}</p>
                   <p className="text-xs text-muted-foreground mt-2 capitalize">
                     {compliment.category}

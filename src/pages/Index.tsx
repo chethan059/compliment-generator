@@ -3,20 +3,22 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Clock, Plus, ArrowRight } from "lucide-react";
+import { Sparkles, Clock, Plus, ArrowRight, Bell } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useCompliments } from "@/context/ComplimentContext";
 import ComplimentCard from "@/components/ComplimentCard";
 import { Compliment, ComplimentCategory } from "@/types";
 import { getAllComplimentCategories } from "@/data/compliments";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
-  const { getRandomCompliment } = useCompliments();
+  const { getRandomCompliment, randomNotificationsEnabled } = useCompliments();
   const [currentCompliment, setCurrentCompliment] = useState<Compliment | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<ComplimentCategory | undefined>(undefined);
   const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const generateCompliment = () => {
     setIsGenerating(true);
@@ -139,9 +141,50 @@ const Index = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card
+                className={`hover:shadow-md transition-shadow duration-300 group cursor-pointer border-2 ${
+                  randomNotificationsEnabled ? 'border-primary/30' : ''
+                }`}
+                onClick={() => navigate('/settings')}
+              >
+                <CardContent className="p-5">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <Bell className={`w-8 h-8 mr-4 ${randomNotificationsEnabled ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <div>
+                        <h3 className="text-lg font-medium">
+                          Random Surprises
+                          {randomNotificationsEnabled && <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">On</span>}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {randomNotificationsEnabled 
+                            ? "You'll receive surprise compliments" 
+                            : "Enable surprise compliments"}
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-0 group-hover:translate-x-1 duration-300" />
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {isMobile && (
+          <div className="mt-8 p-4 border border-dashed border-primary/20 rounded-lg">
+            <h3 className="text-sm font-medium mb-2 flex items-center">
+              <Bell className="w-4 h-4 mr-2 text-primary" />
+              Mobile Tips
+            </h3>
+            <ul className="text-xs text-muted-foreground space-y-1">
+              <li>• Add this app to your home screen for the best experience</li>
+              <li>• Allow notifications when prompted</li>
+              <li>• Keep the app running in the background for scheduled notifications</li>
+            </ul>
+          </div>
+        )}
       </div>
     </Layout>
   );

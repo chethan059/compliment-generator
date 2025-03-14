@@ -1,7 +1,7 @@
 
-import { ScheduledCompliment, Compliment } from "@/types";
+import { ScheduledCompliment, Compliment, NotificationSettings } from "@/types";
 import { getRandomCompliment } from "@/utils/storage";
-import { useToast } from "@/hooks/use-toast";
+import { getLastRandomNotification, saveLastRandomNotification } from "@/utils/storage";
 
 // Check if a scheduled time is due based on the current time
 export const isScheduleDue = (schedule: ScheduledCompliment): boolean => {
@@ -64,6 +64,74 @@ export const checkScheduledCompliments = (
     const updated = activeSchedules.find(as => as.id === s.id);
     return updated || s;
   });
+};
+
+// Check if a random notification should be shown
+export const checkForRandomNotification = (
+  randomNotificationsEnabled: boolean,
+  sendNotification: (compliment: Compliment) => void
+): boolean => {
+  if (!randomNotificationsEnabled) return false;
+  
+  const now = new Date();
+  const currentHour = now.getHours();
+  
+  // Only show random notifications during waking hours (8 AM to 10 PM)
+  if (currentHour < 8 || currentHour > 22) return false;
+  
+  // Get the last time a random notification was shown
+  const lastShown = getLastRandomNotification();
+  const hoursSinceLastNotification = (now.getTime() - lastShown) / (1000 * 60 * 60);
+  
+  // Decide whether to show a notification based on time passed and randomness
+  // The longer it's been, the higher the chance
+  const baseChance = 0.01; // 1% base chance per check (checks happen every 30 seconds)
+  const timeMultiplier = Math.min(hoursSinceLastNotification, 4) / 4; // Max out at 4 hours
+  const chance = baseChance + (0.04 * timeMultiplier); // Up to 5% chance
+  
+  if (Math.random() < chance) {
+    const compliment = getRandomCompliment();
+    if (compliment) {
+      sendNotification(compliment);
+      saveLastRandomNotification(now.getTime());
+      return true;
+    }
+  }
+  
+  return false;
+};
+
+// Play notification sound based on settings
+export const playNotificationSound = (settings: NotificationSettings) => {
+  if (settings.sound && !settings.silent) {
+    try {
+      // Simple beep sound using Web Audio API
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.value = 800;
+      gainNode.gain.value = 0.1;
+      
+      oscillator.start();
+      setTimeout(() => {
+        oscillator.stop();
+      }, 200);
+    } catch (e) {
+      console.error('Could not play notification sound:', e);
+    }
+  }
+};
+
+// Trigger device vibration based on settings
+export const triggerVibration = (settings: NotificationSettings) => {
+  if (settings.vibration && !settings.silent && navigator.vibrate) {
+    navigator.vibrate(200);
+  }
 };
 
 // Format time for display (12-hour format)

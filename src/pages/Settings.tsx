@@ -1,105 +1,64 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Layout from "@/components/Layout";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Download, 
-  Upload, 
-  Bell, 
-  Volume2, 
-  VolumeX, 
-  RefreshCw,
-  AlertTriangle,
-} from "lucide-react";
-import { useCompliments } from "@/context/ComplimentContext";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { exportData, importData } from "@/utils/storage";
+import { useCompliments } from "@/context/ComplimentContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
+import { Bell, Download, Upload, VolumeX, Vibrate } from "lucide-react";
 
 const Settings = () => {
-  const { notificationSettings, updateNotificationSettings, refreshCompliments } = useCompliments();
+  const { notificationSettings, updateNotificationSettings, randomNotificationsEnabled, toggleRandomNotifications } = useCompliments();
+  const [importText, setImportText] = useState("");
   const { toast } = useToast();
-  const [settings, setSettings] = useState(notificationSettings);
-
-  const handleSettingChange = (key: keyof typeof settings, value: boolean) => {
-    const updatedSettings = { ...settings, [key]: value };
-    
-    // If sound is turned on, silent should be turned off and vice versa
-    if (key === "sound" && value === true) {
-      updatedSettings.silent = false;
-    } else if (key === "silent" && value === true) {
-      updatedSettings.sound = false;
-    }
-    
-    setSettings(updatedSettings);
-    updateNotificationSettings(updatedSettings);
-  };
+  const isMobile = useIsMobile();
 
   const handleExport = () => {
-    const jsonData = exportData();
-    const blob = new Blob([jsonData], { type: "application/json" });
+    const data = exportData();
+    const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     
+    // Create a download link and trigger it
     const a = document.createElement("a");
     a.href = url;
-    a.download = `compliments-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = "compliments-data.json";
     document.body.appendChild(a);
     a.click();
+    
+    // Clean up
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
+    
     toast({
       title: "Data exported",
-      description: "Your compliments and settings have been downloaded."
+      description: "Your compliments data has been exported.",
     });
   };
-
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const contents = e.target?.result as string;
-        const success = importData(contents);
-        
-        if (success) {
-          refreshCompliments();
-          toast({
-            title: "Data imported successfully",
-            description: "Your compliments and settings have been restored."
-          });
-        } else {
-          throw new Error("Invalid data format");
-        }
-      } catch (error) {
+  
+  const handleImport = () => {
+    try {
+      const success = importData(importText);
+      if (success) {
+        setImportText("");
         toast({
-          title: "Import failed",
-          description: "The file format is invalid or corrupted.",
-          variant: "destructive"
+          title: "Data imported",
+          description: "Your compliments data has been imported successfully.",
         });
+        // Reload the page to reflect changes
+        window.location.reload();
+      } else {
+        throw new Error("Import failed");
       }
-      
-      // Reset file input
-      event.target.value = "";
-    };
-    
-    reader.readAsText(file);
-  };
-
-  const resetApp = () => {
-    if (confirm("Are you sure you want to reset the app? This will delete all your compliments and settings.")) {
-      localStorage.clear();
-      refreshCompliments();
+    } catch (error) {
       toast({
-        title: "App reset complete",
-        description: "All data has been cleared. The app will now reload."
+        title: "Import failed",
+        description: "There was an error importing your data. Please check the format.",
+        variant: "destructive",
       });
-      setTimeout(() => window.location.reload(), 1500);
     }
   };
 
@@ -110,52 +69,51 @@ const Settings = () => {
           <CardHeader>
             <CardTitle>Notification Settings</CardTitle>
             <CardDescription>
-              Configure how you receive compliment notifications
+              Configure how you want to receive your compliments
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Bell className="h-5 w-5 text-primary" />
-                <div>
-                  <Label htmlFor="sound">Sound</Label>
-                  <p className="text-sm text-muted-foreground">Play sound with notifications</p>
-                </div>
+              <div className="flex items-center space-x-2">
+                <Bell className="w-5 h-5 text-muted-foreground" />
+                <Label htmlFor="random-notifications">Random Compliments</Label>
               </div>
               <Switch 
-                id="sound" 
-                checked={settings.sound}
-                onCheckedChange={(checked) => handleSettingChange("sound", checked)}
+                id="random-notifications" 
+                checked={randomNotificationsEnabled}
+                onCheckedChange={toggleRandomNotifications}
               />
             </div>
             
+            <div className="text-sm text-muted-foreground pl-7 -mt-2">
+              Receive surprise compliments throughout the day
+            </div>
+            
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <RefreshCw className="h-5 w-5 text-primary" />
-                <div>
-                  <Label htmlFor="vibration">Vibration</Label>
-                  <p className="text-sm text-muted-foreground">Vibrate when notifications arrive</p>
-                </div>
+              <div className="flex items-center space-x-2">
+                <Vibrate className="w-5 h-5 text-muted-foreground" />
+                <Label htmlFor="vibration">Vibration</Label>
               </div>
               <Switch 
                 id="vibration" 
-                checked={settings.vibration}
-                onCheckedChange={(checked) => handleSettingChange("vibration", checked)}
+                checked={notificationSettings.vibration}
+                onCheckedChange={(checked) => 
+                  updateNotificationSettings({...notificationSettings, vibration: checked})
+                }
               />
             </div>
             
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <VolumeX className="h-5 w-5 text-primary" />
-                <div>
-                  <Label htmlFor="silent">Silent Mode</Label>
-                  <p className="text-sm text-muted-foreground">Receive notifications without sound</p>
-                </div>
+              <div className="flex items-center space-x-2">
+                <VolumeX className="w-5 h-5 text-muted-foreground" />
+                <Label htmlFor="silent">Silent Mode</Label>
               </div>
               <Switch 
                 id="silent" 
-                checked={settings.silent}
-                onCheckedChange={(checked) => handleSettingChange("silent", checked)}
+                checked={notificationSettings.silent}
+                onCheckedChange={(checked) => 
+                  updateNotificationSettings({...notificationSettings, silent: checked})
+                }
               />
             </div>
           </CardContent>
@@ -163,60 +121,63 @@ const Settings = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Backup & Restore</CardTitle>
+            <CardTitle>Data Management</CardTitle>
             <CardDescription>
-              Export or import your compliments and settings
+              Import or export your compliment data
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
-                variant="outline" 
-                className="flex items-center" 
-                onClick={handleExport}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export Data
-              </Button>
-              
-              <div className="relative">
-                <Button variant="outline" className="flex items-center w-full sm:w-auto">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import Data
-                </Button>
-                <input 
-                  type="file" 
-                  accept=".json" 
-                  onChange={handleImport}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                />
-              </div>
-            </div>
+            <Button 
+              onClick={handleExport} 
+              variant="outline" 
+              className="w-full sm:w-auto flex items-center"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export Data
+            </Button>
             
-            <Separator className="my-4" />
-            
-            <div>
+            <div className="space-y-2">
+              <Label htmlFor="import-data">Import Data</Label>
+              <textarea 
+                id="import-data"
+                placeholder="Paste your JSON data here"
+                className="w-full h-32 p-2 border rounded-md"
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+              ></textarea>
               <Button 
-                variant="destructive" 
-                className="flex items-center" 
-                onClick={resetApp}
+                onClick={handleImport} 
+                disabled={!importText} 
+                variant="secondary"
+                className="flex items-center"
               >
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                Reset App
+                <Upload className="w-4 h-4 mr-2" />
+                Import
               </Button>
-              <p className="text-xs text-muted-foreground mt-2">
-                This will delete all your compliments and settings. This action cannot be undone.
-              </p>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-6 text-center text-sm text-muted-foreground">
-            <p>Daily Positivity App</p>
-            <p>Version 1.0.0</p>
-          </CardContent>
-        </Card>
+        {isMobile && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Mobile App</CardTitle>
+              <CardDescription>
+                Get the most out of your compliments on mobile
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4 text-sm">
+                This web app is optimized for mobile use. For the best experience:
+              </p>
+              <ul className="list-disc pl-5 space-y-2 text-sm">
+                <li>Add to your home screen for app-like experience</li>
+                <li>Allow notifications when prompted for timely compliments</li>
+                <li>Keep the app running in the background for scheduled compliments</li>
+              </ul>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </Layout>
   );

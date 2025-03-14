@@ -6,6 +6,8 @@ import { defaultCompliments } from "@/data/compliments";
 const COMPLIMENTS_KEY = 'compliments';
 const SCHEDULED_COMPLIMENTS_KEY = 'scheduled_compliments';
 const NOTIFICATION_SETTINGS_KEY = 'notification_settings';
+const RANDOM_NOTIFICATIONS_KEY = 'random_notifications';
+const LAST_RANDOM_NOTIFICATION_KEY = 'last_random_notification';
 
 // Get all compliments from local storage
 export const getCompliments = (): Record<ComplimentCategory, Compliment[]> => {
@@ -111,12 +113,35 @@ export const saveNotificationSettings = (settings: NotificationSettings): void =
   localStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(settings));
 };
 
+// Get random notifications setting
+export const getRandomNotificationSettings = (): boolean => {
+  const enabled = localStorage.getItem(RANDOM_NOTIFICATIONS_KEY);
+  return enabled ? JSON.parse(enabled) : false;
+};
+
+// Save random notifications setting
+export const saveRandomNotificationSettings = (enabled: boolean): void => {
+  localStorage.setItem(RANDOM_NOTIFICATIONS_KEY, JSON.stringify(enabled));
+};
+
+// Get last random notification timestamp
+export const getLastRandomNotification = (): number => {
+  const timestamp = localStorage.getItem(LAST_RANDOM_NOTIFICATION_KEY);
+  return timestamp ? parseInt(timestamp, 10) : 0;
+};
+
+// Save last random notification timestamp
+export const saveLastRandomNotification = (timestamp: number): void => {
+  localStorage.setItem(LAST_RANDOM_NOTIFICATION_KEY, timestamp.toString());
+};
+
 // Export data as JSON
 export const exportData = (): string => {
   const data = {
     compliments: getCompliments(),
     scheduledCompliments: getScheduledCompliments(),
-    notificationSettings: getNotificationSettings()
+    notificationSettings: getNotificationSettings(),
+    randomNotificationsEnabled: getRandomNotificationSettings()
   };
   
   return JSON.stringify(data);
@@ -137,6 +162,10 @@ export const importData = (jsonData: string): boolean => {
     
     if (data.notificationSettings) {
       localStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(data.notificationSettings));
+    }
+    
+    if (data.randomNotificationsEnabled !== undefined) {
+      localStorage.setItem(RANDOM_NOTIFICATIONS_KEY, JSON.stringify(data.randomNotificationsEnabled));
     }
     
     return true;

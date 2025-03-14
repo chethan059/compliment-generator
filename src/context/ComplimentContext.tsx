@@ -9,7 +9,9 @@ import {
   saveScheduledCompliment,
   deleteScheduledCompliment,
   getNotificationSettings,
-  saveNotificationSettings
+  saveNotificationSettings,
+  getRandomNotificationSettings,
+  saveRandomNotificationSettings
 } from '@/utils/storage';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,11 +19,13 @@ interface ComplimentContextType {
   compliments: Record<ComplimentCategory, Compliment[]>;
   scheduledCompliments: ScheduledCompliment[];
   notificationSettings: NotificationSettings;
+  randomNotificationsEnabled: boolean;
   getRandomCompliment: (category?: ComplimentCategory) => Compliment | null;
   addCustomCompliment: (text: string, category: ComplimentCategory) => void;
   addScheduledCompliment: (scheduled: ScheduledCompliment) => void;
   removeScheduledCompliment: (id: string) => void;
   updateNotificationSettings: (settings: NotificationSettings) => void;
+  toggleRandomNotifications: (enabled: boolean) => void;
   refreshCompliments: () => void;
 }
 
@@ -31,12 +35,14 @@ export const ComplimentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [compliments, setCompliments] = useState<Record<ComplimentCategory, Compliment[]>>({} as Record<ComplimentCategory, Compliment[]>);
   const [scheduledCompliments, setScheduledCompliments] = useState<ScheduledCompliment[]>([]);
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({ sound: true, vibration: true, silent: false });
+  const [randomNotificationsEnabled, setRandomNotificationsEnabled] = useState<boolean>(false);
   const { toast } = useToast();
 
   useEffect(() => {
     refreshCompliments();
     setScheduledCompliments(getScheduledCompliments());
     setNotificationSettings(getNotificationSettings());
+    setRandomNotificationsEnabled(getRandomNotificationSettings());
   }, []);
 
   const refreshCompliments = () => {
@@ -86,6 +92,17 @@ export const ComplimentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       description: "Your notification preferences have been saved.",
     });
   };
+  
+  const toggleRandomNotifications = (enabled: boolean) => {
+    saveRandomNotificationSettings(enabled);
+    setRandomNotificationsEnabled(enabled);
+    toast({
+      title: "Random notifications " + (enabled ? "enabled" : "disabled"),
+      description: enabled 
+        ? "You will receive surprise compliments throughout the day." 
+        : "You will no longer receive surprise compliments.",
+    });
+  };
 
   return (
     <ComplimentContext.Provider
@@ -93,11 +110,13 @@ export const ComplimentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         compliments,
         scheduledCompliments,
         notificationSettings,
+        randomNotificationsEnabled,
         getRandomCompliment,
         addCustomCompliment,
         addScheduledCompliment,
         removeScheduledCompliment,
         updateNotificationSettings,
+        toggleRandomNotifications,
         refreshCompliments
       }}
     >
