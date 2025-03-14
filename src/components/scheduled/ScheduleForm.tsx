@@ -122,7 +122,7 @@ const ScheduleForm = ({ onSave, editingSchedule, isEditing, onCancelEdit }: Sche
                 <SelectValue placeholder="Any category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any category</SelectItem>
+                <SelectItem value="any">Any category</SelectItem>
                 {getAllComplimentCategories().map(cat => (
                   <SelectItem key={cat} value={cat} className="capitalize">
                     {cat}

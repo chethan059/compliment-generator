@@ -2,9 +2,10 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Clock, Trash2, Calendar, Edit } from "lucide-react";
 import { ScheduledCompliment } from "@/types";
-import { Clock, Calendar, Edit, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatTimeDisplay, formatDaysDisplay } from "@/utils/notificationService";
 
 interface ScheduleCardProps {
   schedule: ScheduledCompliment;
@@ -13,28 +14,64 @@ interface ScheduleCardProps {
 }
 
 const ScheduleCard = ({ schedule, onEdit, onDelete }: ScheduleCardProps) => {
-  const formatTimeDisplay = (time: string) => {
-    const [hours, minutes] = time.split(":");
-    const hour = parseInt(hours, 10);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
-    return `${hour12}:${minutes} ${ampm}`;
-  };
-
-  const formatDaysDisplay = (days: number[]) => {
-    if (days.length === 7) return "Every day";
-    if (days.length === 0) return "Never";
-    if (JSON.stringify(days.sort()) === JSON.stringify([1, 2, 3, 4, 5])) return "Weekdays";
-    if (JSON.stringify(days.sort()) === JSON.stringify([0, 6])) return "Weekends";
+  // Calculate when the next compliment will be delivered
+  const getNextOccurrence = () => {
+    const now = new Date();
+    const currentDay = now.getDay();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
     
-    return days
-      .map(day => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][day])
-      .join(", ");
+    const [scheduledHours, scheduledMinutes] = schedule.time.split(':').map(Number);
+    
+    // Find the next day this schedule will run
+    let daysUntilNext = -1;
+    let nextDay = -1;
+    
+    for (let i = 0; i < 7; i++) {
+      const checkDay = (currentDay + i) % 7;
+      if (schedule.days.includes(checkDay)) {
+        // If same day, check if the time has passed
+        if (i === 0) {
+          const timeHasPassed = 
+            currentHours > scheduledHours || 
+            (currentHours === scheduledHours && currentMinutes >= scheduledMinutes);
+          
+          if (!timeHasPassed) {
+            daysUntilNext = 0;
+            nextDay = checkDay;
+            break;
+          }
+        } else {
+          daysUntilNext = i;
+          nextDay = checkDay;
+          break;
+        }
+      }
+    }
+    
+    if (daysUntilNext === -1) return "Not scheduled";
+    
+    if (daysUntilNext === 0) {
+      const minutesUntil = 
+        (scheduledHours - currentHours) * 60 + 
+        (scheduledMinutes - currentMinutes);
+      
+      if (minutesUntil < 60) {
+        return `In ${minutesUntil} ${minutesUntil === 1 ? 'minute' : 'minutes'}`;
+      } else {
+        const hoursUntil = Math.floor(minutesUntil / 60);
+        return `In ${hoursUntil} ${hoursUntil === 1 ? 'hour' : 'hours'}`;
+      }
+    } else if (daysUntilNext === 1) {
+      return "Tomorrow";
+    } else {
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      return `On ${dayNames[nextDay]}`;
+    }
   };
 
   return (
     <motion.div
-      key={schedule.id}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, height: 0 }}
@@ -53,29 +90,33 @@ const ScheduleCard = ({ schedule, onEdit, onDelete }: ScheduleCardProps) => {
               <div className="flex items-center space-x-2">
                 <h3 className="font-medium">{formatTimeDisplay(schedule.time)}</h3>
                 {schedule.complimentCategory && (
-                  <span className={cn(
-                    "text-xs px-2 py-0.5 rounded-full capitalize bg-secondary"
-                  )}>
+                  <span className={cn("text-xs px-2 py-0.5 rounded-full capitalize bg-secondary")}>
                     {schedule.complimentCategory}
                   </span>
                 )}
               </div>
+              
               <div className="text-sm text-muted-foreground flex items-center space-x-1">
                 <Calendar className="h-3 w-3" />
                 <span>{formatDaysDisplay(schedule.days)}</span>
               </div>
+              
+              <div className="text-xs text-primary mt-1">
+                Next: {getNextOccurrence()}
+              </div>
             </div>
             
             <div className="flex items-center space-x-1">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={() => onEdit(schedule)}
               >
                 <Edit className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="ghost" 
+              
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={() => onDelete(schedule.id)}
               >
