@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import Layout from "@/components/Layout";
@@ -21,8 +20,6 @@ import { useCompliments } from "@/context/ComplimentContext";
 import { ScheduledCompliment, ComplimentCategory } from "@/types";
 import { getAllComplimentCategories } from "@/data/compliments";
 import { cn } from "@/lib/utils";
-
-<lov-add-dependency>uuid@latest</lov-add-dependency>
 
 const ScheduledCompliments = () => {
   const { scheduledCompliments, addScheduledCompliment, removeScheduledCompliment } = useCompliments();
