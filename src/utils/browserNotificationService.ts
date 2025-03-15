@@ -36,8 +36,8 @@ export const showBrowserNotification = (compliment: Compliment): boolean => {
       body: compliment.text,
       icon: '/favicon.ico',
       badge: '/favicon.ico',
-      tag: `compliment-${compliment.id}`,
-      timestamp: compliment.createdAt
+      tag: `compliment-${compliment.id}`
+      // Removed the timestamp property as it's not a valid NotificationOptions property
     });
     
     // Handle notification click
