@@ -78,7 +78,7 @@ export const getAllComplimentCategories = (): ComplimentCategory[] => {
   const categories = new Set<ComplimentCategory>();
   
   allCompliments.forEach(compliment => {
-    categories.add(compliment.category);
+    categories.add(compliment.category as ComplimentCategory);
   });
   
   return Array.from(categories);

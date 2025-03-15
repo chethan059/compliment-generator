@@ -29,3 +29,5 @@ export interface NotificationSettings {
   vibration: boolean;
   silent: boolean;
 }
+
+export type NotificationPermissionStatus = 'default' | 'granted' | 'denied';

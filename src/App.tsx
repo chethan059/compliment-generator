@@ -10,7 +10,7 @@ import { useCompliments } from "@/context/ComplimentContext";
 import ComplimentNotification from "@/components/notifications/ComplimentNotification";
 import { Compliment } from "@/types";
 import { checkForRandomNotification, playNotificationSound, triggerVibration } from "@/utils/notificationService";
-import { initializeNotifications, sendNativeNotification, setupNotificationHandlers, isMobileDevice } from "@/utils/mobileNotificationService";
+import { showBrowserNotification, requestNotificationPermission } from "@/utils/browserNotificationService";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -23,26 +23,16 @@ const queryClient = new QueryClient();
 function AppNotifications() {
   const { randomNotificationsEnabled, notificationSettings } = useCompliments();
   const [randomCompliment, setRandomCompliment] = useState<Compliment | null>(null);
-  const [notificationsInitialized, setNotificationsInitialized] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<boolean>(false);
 
-  // Initialize mobile notifications when app starts
+  // Initialize browser notifications when app starts
   useEffect(() => {
-    const initNotifs = async () => {
-      if (isMobileDevice()) {
-        const initialized = await initializeNotifications();
-        if (initialized) {
-          setNotificationsInitialized(true);
-          setupNotificationHandlers();
-        }
-      } else {
-        // Web notifications
-        if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-          Notification.requestPermission();
-        }
-      }
+    const initNotifications = async () => {
+      const permission = await requestNotificationPermission();
+      setNotificationPermission(permission === 'granted');
     };
     
-    initNotifs();
+    initNotifications();
   }, []);
 
   useEffect(() => {
@@ -58,16 +48,9 @@ function AppNotifications() {
             playNotificationSound(notificationSettings);
             triggerVibration(notificationSettings);
             
-            // Send native notification on mobile
-            if (isMobileDevice() && notificationsInitialized) {
-              await sendNativeNotification(compliment);
-            } 
-            // Show browser notification on web
-            else if ('Notification' in window && Notification.permission === 'granted') {
-              new Notification('Your Surprise Compliment', { 
-                body: compliment.text,
-                icon: '/favicon.ico'
-              });
+            // Show browser notification
+            if (notificationPermission) {
+              showBrowserNotification(compliment);
             }
           }
         );
@@ -75,7 +58,7 @@ function AppNotifications() {
     }, 30 * 1000);
 
     return () => clearInterval(checkInterval);
-  }, [randomNotificationsEnabled, notificationSettings, notificationsInitialized]);
+  }, [randomNotificationsEnabled, notificationSettings, notificationPermission]);
 
   return (
     <ComplimentNotification 

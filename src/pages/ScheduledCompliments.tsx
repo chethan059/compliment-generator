@@ -7,6 +7,7 @@ import ScheduleForm from "@/components/scheduled/ScheduleForm";
 import ScheduleList from "@/components/scheduled/ScheduleList";
 import ComplimentNotification from "@/components/notifications/ComplimentNotification";
 import { checkScheduledCompliments } from "@/utils/notificationService";
+import { showBrowserNotification, getNotificationPermission } from "@/utils/browserNotificationService";
 
 const ScheduledCompliments = () => {
   const { scheduledCompliments, addScheduledCompliment, removeScheduledCompliment } = useCompliments();
@@ -23,12 +24,9 @@ const ScheduledCompliments = () => {
           // Display the notification when a scheduled compliment is due
           setActiveNotification(compliment);
           
-          // Also try to use the browser notification API if available
-          if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('Your Compliment', { 
-              body: compliment.text,
-              icon: '/favicon.ico'
-            });
+          // Show browser notification
+          if (getNotificationPermission() === 'granted') {
+            showBrowserNotification(compliment);
           }
         }
       );
@@ -50,13 +48,6 @@ const ScheduledCompliments = () => {
     
     return () => clearInterval(intervalId);
   }, [scheduledCompliments, addScheduledCompliment]);
-  
-  // Request notification permissions when the component loads
-  useEffect(() => {
-    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-      Notification.requestPermission();
-    }
-  }, []);
   
   const handleSave = (schedule: ScheduledCompliment) => {
     addScheduledCompliment(schedule);
