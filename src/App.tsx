@@ -11,6 +11,7 @@ import ComplimentNotification from "@/components/notifications/ComplimentNotific
 import { Compliment } from "@/types";
 import { checkForRandomNotification, playNotificationSound, triggerVibration } from "@/utils/notificationService";
 import { showBrowserNotification, requestNotificationPermission } from "@/utils/browserNotificationService";
+import { isMobileDevice, sendNativeNotification, setupNotificationHandlers, initializeNotifications } from "@/utils/mobileNotificationService";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -24,12 +25,21 @@ function AppNotifications() {
   const { randomNotificationsEnabled, notificationSettings } = useCompliments();
   const [randomCompliment, setRandomCompliment] = useState<Compliment | null>(null);
   const [notificationPermission, setNotificationPermission] = useState<boolean>(false);
-
-  // Initialize browser notifications when app starts
+  const [mobileNotificationsEnabled, setMobileNotificationsEnabled] = useState<boolean>(false);
+  
+  // Initialize notifications when app starts
   useEffect(() => {
     const initNotifications = async () => {
-      const permission = await requestNotificationPermission();
-      setNotificationPermission(permission === 'granted');
+      if (isMobileDevice()) {
+        // Initialize mobile notifications
+        const mobilePermission = await initializeNotifications();
+        setMobileNotificationsEnabled(mobilePermission);
+        setupNotificationHandlers();
+      } else {
+        // Initialize browser notifications
+        const permission = await requestNotificationPermission();
+        setNotificationPermission(permission === 'granted');
+      }
     };
     
     initNotifications();
@@ -42,14 +52,18 @@ function AppNotifications() {
         const notificationShown = checkForRandomNotification(
           randomNotificationsEnabled,
           async (compliment) => {
-            setRandomCompliment(compliment);
-            
             // Play sound and vibrate based on user settings
             playNotificationSound(notificationSettings);
             triggerVibration(notificationSettings);
             
-            // Show browser notification
-            if (notificationPermission) {
+            // Set in-app notification
+            setRandomCompliment(compliment);
+            
+            if (isMobileDevice() && mobileNotificationsEnabled) {
+              // Show mobile notification
+              sendNativeNotification(compliment);
+            } else if (notificationPermission) {
+              // Show browser notification
               showBrowserNotification(compliment);
             }
           }
@@ -58,7 +72,7 @@ function AppNotifications() {
     }, 30 * 1000);
 
     return () => clearInterval(checkInterval);
-  }, [randomNotificationsEnabled, notificationSettings, notificationPermission]);
+  }, [randomNotificationsEnabled, notificationSettings, notificationPermission, mobileNotificationsEnabled]);
 
   return (
     <ComplimentNotification 

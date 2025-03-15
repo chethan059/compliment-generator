@@ -8,6 +8,7 @@ import ScheduleList from "@/components/scheduled/ScheduleList";
 import ComplimentNotification from "@/components/notifications/ComplimentNotification";
 import { checkScheduledCompliments } from "@/utils/notificationService";
 import { showBrowserNotification, getNotificationPermission } from "@/utils/browserNotificationService";
+import { isMobileDevice, sendNativeNotification } from "@/utils/mobileNotificationService";
 
 const ScheduledCompliments = () => {
   const { scheduledCompliments, addScheduledCompliment, removeScheduledCompliment } = useCompliments();
@@ -21,11 +22,15 @@ const ScheduledCompliments = () => {
       const updatedSchedules = checkScheduledCompliments(
         scheduledCompliments,
         (compliment) => {
-          // Display the notification when a scheduled compliment is due
+          // Display the in-app notification
           setActiveNotification(compliment);
           
-          // Show browser notification
-          if (getNotificationPermission() === 'granted') {
+          // Determine which notification system to use
+          if (isMobileDevice()) {
+            // Use mobile native notifications
+            sendNativeNotification(compliment);
+          } else if (getNotificationPermission() === 'granted') {
+            // Use browser notifications
             showBrowserNotification(compliment);
           }
         }
