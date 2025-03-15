@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,13 +10,13 @@ import ComplimentNotification from "@/components/notifications/ComplimentNotific
 import { Compliment } from "@/types";
 import { checkForRandomNotification, playNotificationSound, triggerVibration } from "@/utils/notificationService";
 import { showBrowserNotification, requestNotificationPermission } from "@/utils/browserNotificationService";
-import { isMobileDevice, sendNativeNotification, setupNotificationHandlers, initializeNotifications } from "@/utils/mobileNotificationService";
-
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import CustomCompliments from "./pages/CustomCompliments";
-import ScheduledCompliments from "./pages/ScheduledCompliments";
-import Settings from "./pages/Settings";
+import { 
+  isMobileDevice, 
+  sendNativeNotification, 
+  setupNotificationHandlers, 
+  initializeNotifications,
+  setupNotificationChannel 
+} from "@/utils/mobileNotificationService";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +31,10 @@ function AppNotifications() {
     const initNotifications = async () => {
       if (isMobileDevice()) {
         // Initialize mobile notifications
+        console.log('Initializing mobile notifications');
+        await setupNotificationChannel();
         const mobilePermission = await initializeNotifications();
+        console.log('Mobile notification permission:', mobilePermission);
         setMobileNotificationsEnabled(mobilePermission);
         setupNotificationHandlers();
       } else {

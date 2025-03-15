@@ -22,14 +22,18 @@ const ScheduledCompliments = () => {
       const updatedSchedules = checkScheduledCompliments(
         scheduledCompliments,
         (compliment) => {
+          console.log('Scheduled compliment triggered:', compliment);
+          
           // Display the in-app notification
           setActiveNotification(compliment);
           
           // Determine which notification system to use
           if (isMobileDevice()) {
+            console.log('Using mobile notifications for scheduled compliment');
             // Use mobile native notifications
             sendNativeNotification(compliment);
           } else if (getNotificationPermission() === 'granted') {
+            console.log('Using browser notifications for scheduled compliment');
             // Use browser notifications
             showBrowserNotification(compliment);
           }
@@ -99,3 +103,4 @@ const ScheduledCompliments = () => {
 };
 
 export default ScheduledCompliments;
+

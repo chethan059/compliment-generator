@@ -5,8 +5,15 @@ import { Compliment } from '@/types';
 // Initialize notifications
 export const initializeNotifications = async () => {
   try {
+    // Check if the plugin is available
+    if (!('Capacitor' in window) || !(window as any).Capacitor.isPluginAvailable('LocalNotifications')) {
+      console.log('LocalNotifications plugin not available');
+      return false;
+    }
+    
     // Request permission
     const permStatus = await LocalNotifications.requestPermissions();
+    console.log('Notification permission status:', permStatus);
     return permStatus.display === 'granted';
   } catch (error) {
     console.error('Error requesting notification permissions:', error);
@@ -26,6 +33,8 @@ export const sendNativeNotification = async (compliment: Compliment) => {
   if (!isMobileDevice()) return false;
   
   try {
+    console.log('Sending native notification for:', compliment);
+    
     // Schedule a notification
     await LocalNotifications.schedule({
       notifications: [
@@ -34,9 +43,10 @@ export const sendNativeNotification = async (compliment: Compliment) => {
           body: compliment.text,
           id: Date.now(),
           schedule: { at: new Date(Date.now()) },
-          sound: 'beep.wav',
+          sound: null, // Use default sound
           smallIcon: 'ic_stat_icon_config_sample',
-          actionTypeId: '',
+          largeIcon: null,
+          channelId: 'bright-mind-compliments',
           extra: {
             complimentId: compliment.id,
             category: compliment.category
@@ -44,10 +54,34 @@ export const sendNativeNotification = async (compliment: Compliment) => {
         }
       ]
     });
+    
+    console.log('Native notification sent successfully');
     return true;
   } catch (error) {
     console.error('Error sending native notification:', error);
     return false;
+  }
+};
+
+// Setup notification channel (Android specific)
+export const setupNotificationChannel = async () => {
+  if (!isMobileDevice()) return;
+  
+  try {
+    if ('createChannel' in LocalNotifications) {
+      await (LocalNotifications as any).createChannel({
+        id: 'bright-mind-compliments',
+        name: 'Bright Mind Compliments',
+        description: 'Notifications for compliments and affirmations',
+        importance: 4, // HIGH
+        visibility: 1, // PUBLIC
+        lights: true,
+        vibration: true
+      });
+      console.log('Notification channel created');
+    }
+  } catch (error) {
+    console.error('Error creating notification channel:', error);
   }
 };
 
@@ -60,3 +94,4 @@ export const setupNotificationHandlers = () => {
     // Handle notification tap here
   });
 };
+
