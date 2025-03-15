@@ -1,69 +1,62 @@
-# Welcome to your Lovable project
+# Compliment Generator
 
-## Project info
+A modern, feature-rich web application that generates and delivers personalized compliments to brighten your day. Built with React, TypeScript.
 
-**URL**: https://lovable.dev/projects/9f556b87-5b17-42c0-a088-bf0c8b1edbff
+## 🌟 Features
 
-## How can I edit this code?
+- **Random Compliments**: Receive random compliments throughout the day
+- **Custom Compliments**: Create and manage your own collection of compliments
+- **Scheduled Notifications**: Set up scheduled compliment deliveries
+- **Cross-Platform Support**: Works on web browsers and mobile devices (iOS & Android)
+- **Rich UI Components**: Built with modern UI components using shadcn/ui
+- **Responsive Design**: Beautiful and intuitive interface that works on all devices
+- **Notification System**: 
+  - Browser notifications for web users
+  - Native notifications for mobile users
+  - Customizable notification settings
+  - Sound and vibration support
 
-There are several ways of editing your application.
+## 🛠️ Installation
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/9f556b87-5b17-42c0-a088-bf0c8b1edbff) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/compliment-generator.git
+cd compliment-generator
 ```
 
-**Edit a file directly in GitHub**
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+# or
+bun install
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. Start the development server:
+```bash
+npm run dev
+# or
+yarn dev
+# or
+bun dev
+```
 
-**Use GitHub Codespaces**
+## 🔧 Configuration
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The project uses various configuration files:
+- `vite.config.ts` - Vite configuration
+- `tsconfig.json` - TypeScript configuration
+- `tailwind.config.ts` - Tailwind CSS configuration
+- `capacitor.config.ts` - Capacitor configuration
 
-## What technologies are used for this project?
 
-This project is built with .
+## 🤝 Contributing
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## How can I deploy this project?
+## 📄 License
 
-Simply open [Lovable](https://lovable.dev/projects/9f556b87-5b17-42c0-a088-bf0c8b1edbff) and click on Share -> Publish.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+Made with ❤️ to spread positivity and kindness
