@@ -1,6 +1,6 @@
 
 import { Compliment, ComplimentCategory, ScheduledCompliment, NotificationSettings } from "@/types";
-import { defaultCompliments } from "@/data/compliments";
+import { defaultCompliments, allCompliments } from "@/data/compliments";
 
 // Local Storage Keys
 const COMPLIMENTS_KEY = 'compliments';
@@ -12,11 +12,27 @@ const LAST_RANDOM_NOTIFICATION_KEY = 'last_random_notification';
 // Get all compliments from local storage
 export const getCompliments = (): Record<ComplimentCategory, Compliment[]> => {
   const storedCompliments = localStorage.getItem(COMPLIMENTS_KEY);
+  
   if (!storedCompliments) {
-    // Initialize with default compliments if none exist
-    localStorage.setItem(COMPLIMENTS_KEY, JSON.stringify(defaultCompliments));
-    return defaultCompliments;
+    // Initialize with default and additional compliments if none exist
+    const complimentsByCategory: Record<ComplimentCategory, Compliment[]> = {
+      motivational: [],
+      funny: [],
+      encouraging: [],
+      professional: [],
+      personal: [],
+      general: []
+    };
+    
+    // Categorize compliments
+    allCompliments.forEach(compliment => {
+      complimentsByCategory[compliment.category].push(compliment);
+    });
+    
+    localStorage.setItem(COMPLIMENTS_KEY, JSON.stringify(complimentsByCategory));
+    return complimentsByCategory;
   }
+  
   return JSON.parse(storedCompliments);
 };
 

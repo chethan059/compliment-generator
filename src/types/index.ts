@@ -12,7 +12,8 @@ export type ComplimentCategory =
   | 'funny' 
   | 'encouraging' 
   | 'professional' 
-  | 'personal';
+  | 'personal'
+  | 'general';
 
 export interface ScheduledCompliment {
   id: string;
