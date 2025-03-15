@@ -18,6 +18,13 @@ import {
   setupNotificationChannel 
 } from "@/utils/mobileNotificationService";
 
+// Import all the page components
+import Index from "@/pages/Index";
+import CustomCompliments from "@/pages/CustomCompliments";
+import ScheduledCompliments from "@/pages/ScheduledCompliments";
+import Settings from "@/pages/Settings";
+import NotFound from "@/pages/NotFound";
+
 const queryClient = new QueryClient();
 
 function AppNotifications() {
