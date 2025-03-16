@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -36,18 +37,22 @@ function AppNotifications() {
   // Initialize notifications when app starts
   useEffect(() => {
     const initNotifications = async () => {
-      if (isMobileDevice()) {
-        // Initialize mobile notifications
-        console.log('Initializing mobile notifications');
-        await setupNotificationChannel();
-        const mobilePermission = await initializeNotifications();
-        console.log('Mobile notification permission:', mobilePermission);
-        setMobileNotificationsEnabled(mobilePermission);
-        setupNotificationHandlers();
-      } else {
-        // Initialize browser notifications
-        const permission = await requestNotificationPermission();
-        setNotificationPermission(permission === 'granted');
+      try {
+        if (isMobileDevice()) {
+          // Initialize mobile notifications
+          console.log('Initializing mobile notifications');
+          await setupNotificationChannel();
+          const mobilePermission = await initializeNotifications();
+          console.log('Mobile notification permission:', mobilePermission);
+          setMobileNotificationsEnabled(mobilePermission);
+          setupNotificationHandlers();
+        } else {
+          // Initialize browser notifications
+          const permission = await requestNotificationPermission();
+          setNotificationPermission(permission === 'granted');
+        }
+      } catch (error) {
+        console.error('Error initializing notifications:', error);
       }
     };
     
@@ -61,19 +66,23 @@ function AppNotifications() {
         const notificationShown = checkForRandomNotification(
           randomNotificationsEnabled,
           async (compliment) => {
-            // Play sound and vibrate based on user settings
-            playNotificationSound(notificationSettings);
-            triggerVibration(notificationSettings);
-            
-            // Set in-app notification
-            setRandomCompliment(compliment);
-            
-            if (isMobileDevice() && mobileNotificationsEnabled) {
-              // Show mobile notification
-              sendNativeNotification(compliment);
-            } else if (notificationPermission) {
-              // Show browser notification
-              showBrowserNotification(compliment);
+            try {
+              // Play sound and vibrate based on user settings
+              playNotificationSound(notificationSettings);
+              triggerVibration(notificationSettings);
+              
+              // Set in-app notification
+              setRandomCompliment(compliment);
+              
+              if (isMobileDevice() && mobileNotificationsEnabled) {
+                // Show mobile notification
+                await sendNativeNotification(compliment);
+              } else if (notificationPermission) {
+                // Show browser notification
+                showBrowserNotification(compliment);
+              }
+            } catch (error) {
+              console.error('Error showing notification:', error);
             }
           }
         );
